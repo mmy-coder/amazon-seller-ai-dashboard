@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 Dashboard</h1>
+    <p class="page-subtitle">Amazon 跨境电商运营数据看板</p>
+</div>
+
+<!-- 统计卡片 -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-value">{{ stats.total_products }}</div>
+        <div class="stat-label">商品总数</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🔍</div>
+        <div class="stat-value">{{ stats.total_competitors }}</div>
+        <div class="stat-label">竞品总数</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value">{{ stats.avg_profit_margin }}%</div>
+        <div class="stat-label">平均利润率</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value">{{ stats.low_inventory_count }}</div>
+        <div class="stat-label">库存预警</div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-icon">🔴</div>
+        <div class="stat-value">{{ stats.high_risk_count }}</div>
+        <div class="stat-label">高风险测算</div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- 最近新增商品 -->
+    <div class="card">
+        <div class="card-header">
+            <h3>📦 最近新增商品</h3>
+            <a href="/products" class="btn btn-sm">查看全部</a>
+        </div>
+        <div class="card-body">
+            {% if recent_products %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>商品名</th>
+                        <th>类目</th>
+                        <th>售价</th>
+                        <th>库存</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in recent_products %}
+                    <tr>
+                        <td>{{ p.name }}</td>
+                        <td>{{ p.category or '-' }}</td>
+                        <td>${{ "%.2f"|format(p.selling_price) }}</td>
+                        <td>{{ p.inventory }}</td>
+                        <td>
+                            <span class="badge badge-{{ p.status }}">
+                                {% if p.status == 'active' %}在售
+                                {% elif p.status == 'testing' %}测试中
+                                {% else %}已停售{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">暂无商品，<a href="/products/new">添加第一个</a></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 商品状态分布 -->
+    <div class="card">
+        <div class="card-header"><h3>📊 商品状态分布</h3></div>
+        <div class="card-body">
+            <canvas id="statusChart" style="max-height: 200px;"></canvas>
+        </div>
+    </div>
+
+    <!-- 类目分布 -->
+    <div class="card">
+        <div class="card-header"><h3>📂 类目分布</h3></div>
+        <div class="card-body">
+            <canvas id="categoryChart" style="max-height: 200px;"></canvas>
+        </div>
+    </div>
+
+    <!-- 最近利润测算 -->
+    <div class="card">
+        <div class="card-header">
+            <h3>💰 最近利润测算</h3>
+            <a href="/profit" class="btn btn-sm">利润计算器</a>
+        </div>
+        <div class="card-body">
+            {% if recent_profits %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>商品</th>
+                        <th>利润</th>
+                        <th>利润率</th>
+                        <th>风险</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in recent_profits %}
+                    <tr>
+                        <td>{{ r.product_name }}</td>
+                        <td>${{ "%.2f"|format(r.estimated_profit) }}</td>
+                        <td>{{ "%.1f"|format(r.profit_margin) }}%</td>
+                        <td>
+                            <span class="badge badge-{{ r.risk_level }}">
+                                {% if r.risk_level == 'low' %}低风险
+                                {% elif r.risk_level == 'medium' %}中等
+                                {% else %}高风险{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">暂无测算记录</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// 商品状态分布饼图
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusLabels = [];
+const statusData = [];
+{% for d in status_dist %}
+statusLabels.push('{% if d.status == "active" %}在售{% elif d.status == "testing" %}测试中{% else %}已停售{% endif %}');
+statusData.push({{ d.count }});
+{% endfor %}
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: statusLabels,
+        datasets: [{
+            data: statusData,
+            backgroundColor: ['#10b981', '#f59e0b', '#94a3b8'],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// 类目分布柱状图
+const catCtx = document.getElementById('categoryChart').getContext('2d');
+const catLabels = [];
+const catData = [];
+{% for d in category_dist %}
+catLabels.push('{{ d.category }}');
+catData.push({{ d.count }});
+{% endfor %}
+new Chart(catCtx, {
+    type: 'bar',
+    data: {
+        labels: catLabels,
+        datasets: [{
+            label: '商品数',
+            data: catData,
+            backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'],
+            borderRadius: 4,
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+</script>
+{% endblock %}

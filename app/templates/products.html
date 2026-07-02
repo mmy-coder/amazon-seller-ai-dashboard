@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📦 商品管理</h1>
+    <p class="page-subtitle">管理您的 Amazon 产品池</p>
+    <a href="/products/new" class="btn btn-primary">+ 新增商品</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if products %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>商品名</th>
+                    <th>类目</th>
+                    <th>平台</th>
+                    <th>采购成本</th>
+                    <th>售价</th>
+                    <th>库存</th>
+                    <th>竞品数</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>{{ p.id }}</td>
+                    <td><strong>{{ p.name }}</strong></td>
+                    <td>{{ p.category or '-' }}</td>
+                    <td>{{ p.platform }}</td>
+                    <td>¥{{ "%.2f"|format(p.purchase_cost) }}</td>
+                    <td>${{ "%.2f"|format(p.selling_price) }}</td>
+                    <td>
+                        <span class="{% if p.inventory < 10 %}text-danger fw-bold{% endif %}">
+                            {{ p.inventory }}
+                        </span>
+                    </td>
+                    <td>{{ p.competitor_count }}</td>
+                    <td>
+                        <span class="badge badge-{{ p.status }}">
+                            {% if p.status == 'active' %}在售
+                            {% elif p.status == 'testing' %}测试中
+                            {% else %}已停售{% endif %}
+                        </span>
+                    </td>
+                    <td class="actions">
+                        <a href="/products/{{ p.id }}/edit" class="btn btn-sm btn-edit">编辑</a>
+                        <a href="/products/{{ p.id }}/delete"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('确定删除「{{ p.name }}」吗？')">删除</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>📭 暂无商品</p>
+            <p><a href="/products/new">点击添加第一个商品</a></p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

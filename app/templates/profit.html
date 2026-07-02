@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>💰 利润计算器</h1>
+    <p class="page-subtitle">输入成本参数，计算产品利润和风险等级</p>
+</div>
+
+<div class="two-column">
+    <!-- 计算表单 -->
+    <div class="card form-card">
+        <div class="card-header"><h3>📝 参数输入</h3></div>
+        <div class="card-body">
+            <form method="post" action="/profit/calculate" class="form">
+                <div class="form-group">
+                    <label class="form-label">商品名 <span class="required">*</span></label>
+                    <input type="text" name="product_name" class="form-input" required
+                           placeholder="如：Wireless Neck Fan">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">采购成本（¥人民币）<span class="required">*</span></label>
+                        <input type="number" name="purchase_cost" class="form-input" step="0.01" min="0" required
+                               placeholder="如：35.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">售价（$美元）<span class="required">*</span></label>
+                        <input type="number" name="selling_price" class="form-input" step="0.01" min="0.01" required
+                               placeholder="如：25.99">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">头程/物流成本（¥）</label>
+                        <input type="number" name="shipping_cost" class="form-input" step="0.01" min="0"
+                               value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amazon 佣金比例</label>
+                        <input type="number" name="amazon_fee_rate" class="form-input" step="0.01" min="0" max="1"
+                               value="0.15">
+                        <small>默认15%（0.15），如15%就写0.15</small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">FBA 履约费用（$）</label>
+                        <input type="number" name="fba_fee" class="form-input" step="0.01" min="0"
+                               value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">广告成本（¥/件）</label>
+                        <input type="number" name="ad_cost" class="form-input" step="0.01" min="0"
+                               value="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">退货率</label>
+                    <input type="number" name="return_rate" class="form-input" step="0.01" min="0" max="1"
+                           value="0.03">
+                    <small>默认3%（0.03），如5%就写0.05</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">🔍 计算利润</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 计算结果 -->
+    <div>
+        {% if result %}
+        <div class="card result-card">
+            <div class="card-header">
+                <h3>📊 计算结果：{{ result.product_name }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="result-grid">
+                    <div class="result-item">
+                        <span class="result-label">销售收入</span>
+                        <span class="result-value">${{ "%.2f"|format(result.gross_revenue) }}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">总成本</span>
+                        <span class="result-value text-danger">${{ "%.2f"|format(result.total_cost) }}</span>
+                    </div>
+                    <div class="result-item highlight">
+                        <span class="result-label">预估利润</span>
+                        <span class="result-value {{ 'text-success' if result.estimated_profit > 0 else 'text-danger' }}">
+                            ${{ "%.2f"|format(result.estimated_profit) }}
+                        </span>
+                    </div>
+                    <div class="result-item highlight">
+                        <span class="result-label">利润率</span>
+                        <span class="result-value">{{ "%.1f"|format(result.profit_margin) }}%</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">保本售价</span>
+                        <span class="result-value">${{ "%.2f"|format(result.break_even_price) }}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">风险等级</span>
+                        <span class="badge badge-lg badge-{{ result.risk_level }}">
+                            {% if result.risk_level == 'low' %}✅ 低风险
+                            {% elif result.risk_level == 'medium' %}⚠️ 中等风险
+                            {% else %}🔴 高风险{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 风险提示 -->
+                <div class="risk-tip tip-{{ result.risk_level }}">
+                    {% if result.risk_level == 'low' %}
+                    <strong>✅ 低风险：</strong>利润率 ≥ 25%，利润空间充足，值得重点投入。
+                    {% elif result.risk_level == 'medium' %}
+                    <strong>⚠️ 中等风险：</strong>利润率在 10%-25% 之间。可以尝试上市，但需要精细控制成本和广告支出。
+                    {% else %}
+                    <strong>🔴 高风险：</strong>利润率 < 10%！建议：降低采购成本？提高售价？降低广告和物流成本？或者考虑是否要上这个产品线。
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-header"><h3>📊 计算结果</h3></div>
+            <div class="card-body">
+                <p class="empty-state">👈 在左侧输入参数后点击"计算利润"</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 历史记录 -->
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header"><h3>📋 利润测算历史</h3></div>
+    <div class="card-body">
+        {% if records %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>商品</th>
+                    <th>销售收入</th>
+                    <th>总成本</th>
+                    <th>利润</th>
+                    <th>利润率</th>
+                    <th>风险</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in records %}
+                <tr>
+                    <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ r.product_name }}</td>
+                    <td>${{ "%.2f"|format(r.gross_revenue) }}</td>
+                    <td>${{ "%.2f"|format(r.total_cost) }}</td>
+                    <td class="{{ 'text-success' if r.estimated_profit > 0 else 'text-danger' }}">
+                        ${{ "%.2f"|format(r.estimated_profit) }}
+                    </td>
+                    <td>{{ "%.1f"|format(r.profit_margin) }}%</td>
+                    <td>
+                        <span class="badge badge-{{ r.risk_level }}">
+                            {% if r.risk_level == 'low' %}低{% elif r.risk_level == 'medium' %}中{% else %}高{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/profit/{{ r.id }}/delete"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('确定删除吗？')">删除</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-state">暂无测算记录</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

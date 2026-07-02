@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🤖 AI 评论分析</h1>
+    <p class="page-subtitle">粘贴 Amazon 商品评论，AI 帮你提取用户洞察</p>
+</div>
+
+<div class="two-column">
+    <!-- 输入区 -->
+    <div class="card form-card">
+        <div class="card-header"><h3>📝 输入评论</h3></div>
+        <div class="card-body">
+            <form method="post" action="/ai/reviews/analyze" class="form">
+                <div class="form-group">
+                    <label class="form-label">评论文本 <span class="required">*</span></label>
+                    <textarea name="reviews" class="form-input form-textarea" rows="12" required
+                              placeholder="请粘贴 Amazon 商品评论，每条一行或一段。&#10;&#10;例如：&#10;⭐️⭐️⭐️⭐️⭐️ 电池续航太棒了，用了5个小时还有电！&#10;⭐️⭐️ 噪音太大了，办公室根本没法用...&#10;⭐️⭐️⭐️⭐️ 性价比不错，但是这个价位应该有更好的材质。">{{ reviews if reviews else '' }}</textarea>
+                    <small>支持中英文评论，至少输入10个字符</small>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">🤖 AI 分析</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 结果区 -->
+    <div>
+        {% if result %}
+        <div class="card result-card">
+            <div class="card-header"><h3>📊 分析结果</h3></div>
+            <div class="card-body">
+                <div class="ai-section">
+                    <h4>😣 用户主要痛点</h4>
+                    <div class="ai-content">{{ result.pain_points | replace('\n', '<br>') | safe }}</div>
+                </div>
+                <div class="ai-section">
+                    <h4>👍 高频好评点</h4>
+                    <div class="ai-content">{{ result.positive_points | replace('\n', '<br>') | safe }}</div>
+                </div>
+                <div class="ai-section">
+                    <h4>👎 高频差评点</h4>
+                    <div class="ai-content">{{ result.negative_points | replace('\n', '<br>') | safe }}</div>
+                </div>
+                <div class="ai-section">
+                    <h4>🔧 产品改进建议</h4>
+                    <div class="ai-content">{{ result.improvement_suggestions | replace('\n', '<br>') | safe }}</div>
+                </div>
+                <div class="ai-section">
+                    <h4>📋 Listing 优化建议</h4>
+                    <div class="ai-content">{{ result.listing_suggestions | replace('\n', '<br>') | safe }}</div>
+                </div>
+                <div class="ai-section">
+                    <h4>⭐ 可提炼的卖点（五点描述候选）</h4>
+                    <div class="ai-content">{{ result.selling_points | replace('\n', '<br>') | safe }}</div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-header"><h3>📊 分析结果</h3></div>
+            <div class="card-body">
+                <div class="empty-state">
+                    <p>👈 粘贴评论文本后点击"AI 分析"</p>
+                    <p style="margin-top: 8px; font-size: 0.85rem; color: #94a3b8;">
+                        ℹ️ 未配置 DeepSeek API Key 时将使用 Mock 示例数据
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

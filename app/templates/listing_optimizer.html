@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📋 AI Listing 优化</h1>
+    <p class="page-subtitle">输入产品信息，AI 帮你生成专业的 Amazon Listing</p>
+</div>
+
+<div class="two-column">
+    <!-- 输入区 -->
+    <div class="card form-card">
+        <div class="card-header"><h3>📝 产品信息</h3></div>
+        <div class="card-body">
+            <form method="post" action="/ai/listing-optimizer/optimize" class="form">
+                <div class="form-group">
+                    <label class="form-label">商品名 <span class="required">*</span></label>
+                    <input type="text" name="product_name" class="form-input" required
+                           placeholder="如：Wireless Neck Fan">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">类目</label>
+                    <input type="text" name="category" class="form-input"
+                           placeholder="如：Personal Cooling">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">核心卖点</label>
+                    <textarea name="core_selling_points" class="form-input form-textarea" rows="2"
+                              placeholder="如：超长续航、静音设计、无叶安全、轻量化"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">目标用户</label>
+                    <input type="text" name="target_users" class="form-input"
+                           placeholder="如：办公白领、通勤族、户外运动爱好者">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">竞品弱点</label>
+                    <textarea name="competitor_weakness" class="form-input form-textarea" rows="2"
+                              placeholder="如：续航不足3小时，噪音偏大，材质廉价"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">用户痛点</label>
+                    <textarea name="user_pain_points" class="form-input form-textarea" rows="2"
+                              placeholder="如：电池不够用，办公室用怕吵到同事，戴久了脖子痛"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">🤖 优化 Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 结果区 -->
+    <div>
+        {% if result %}
+        <div class="card result-card">
+            <div class="card-header"><h3>📊 优化结果</h3></div>
+            <div class="card-body">
+                <div class="ai-section">
+                    <h4>🏷️ 标题建议</h4>
+                    <div class="ai-content">{{ result.title_suggestions | replace('\n', '<br>') | safe }}</div>
+                </div>
+                <div class="ai-section">
+                    <h4>📌 五点描述（Bullet Points）</h4>
+                    <div class="ai-content">{{ result.bullet_points | replace('\n', '<br>') | safe }}</div>
+                </div>
+                <div class="ai-section">
+                    <h4>🔑 搜索关键词</h4>
+                    <div class="ai-content">{{ result.search_keywords | safe }}</div>
+                </div>
+                <div class="ai-section">
+                    <h4>📝 产品描述</h4>
+                    <div class="ai-content">{{ result.product_description | safe }}</div>
+                </div>
+                <div class="ai-section">
+                    <h4>💡 差异化卖点</h4>
+                    <div class="ai-content">{{ result.differentiation_points | replace('\n', '<br>') | safe }}</div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-header"><h3>📊 优化结果</h3></div>
+            <div class="card-body">
+                <div class="empty-state">
+                    <p>👈 填写产品信息后点击"优化 Listing"</p>
+                    <p style="margin-top: 8px; font-size: 0.85rem; color: #94a3b8;">
+                        ℹ️ 未配置 DeepSeek API Key 时将使用 Mock 示例数据
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

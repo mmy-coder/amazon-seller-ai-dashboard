@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🔍 竞品分析</h1>
+    <p class="page-subtitle">竞品调研与选品分析，找到差异化机会</p>
+    <a href="/competitors/new" class="btn btn-primary">+ 新增竞品</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if competitors %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>关联商品</th>
+                    <th>竞品标题</th>
+                    <th>价格</th>
+                    <th>评分</th>
+                    <th>评论数</th>
+                    <th>主要卖点</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in competitors %}
+                <tr>
+                    <td>{{ c.id }}</td>
+                    <td><strong>{{ c.product_name }}</strong></td>
+                    <td class="text-truncate" style="max-width: 250px;" title="{{ c.title }}">{{ c.title }}</td>
+                    <td>${{ "%.2f"|format(c.price) }}</td>
+                    <td>
+                        <span class="stars">{"⭐" * (c.rating | int)}</span>
+                        {{ "%.1f"|format(c.rating) }}
+                    </td>
+                    <td>{{ c.review_count }}</td>
+                    <td class="text-truncate" style="max-width: 200px;" title="{{ c.main_selling_points }}">{{ c.main_selling_points or '-' }}</td>
+                    <td class="actions">
+                        <a href="/competitors/{{ c.id }}/edit" class="btn btn-sm btn-edit">编辑</a>
+                        <a href="/competitors/{{ c.id }}/delete"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('确定删除该竞品吗？')">删除</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>📭 暂无竞品数据</p>
+            <p><a href="/competitors/new">点击添加第一个竞品</a></p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

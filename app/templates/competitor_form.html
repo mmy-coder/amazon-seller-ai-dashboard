@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% if action == 'edit' %}✏️ 编辑竞品{% else %}➕ 新增竞品{% endif %}</h1>
+    <a href="/competitors" class="btn">← 返回列表</a>
+</div>
+
+<div class="card form-card">
+    <div class="card-body">
+        <form method="post"
+              action="{% if action == 'edit' %}/competitors/{{ competitor.id }}/update{% else %}/competitors{% endif %}"
+              class="form">
+            <div class="form-group">
+                <label class="form-label">关联商品 <span class="required">*</span></label>
+                <select name="product_id" class="form-input" required>
+                    <option value="">-- 选择关联商品 --</option>
+                    {% for p in products %}
+                    <option value="{{ p.id }}"
+                        {% if competitor and competitor.product_id == p.id %}selected{% endif %}>
+                        {{ p.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">竞品标题 <span class="required">*</span></label>
+                <input type="text" name="title" class="form-input" required
+                       value="{{ competitor.title if competitor else '' }}"
+                       placeholder="如：Portable Neck Fan, 4000mAh Rechargeable Personal Fan">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">价格（$美元）</label>
+                    <input type="number" name="price" class="form-input" step="0.01" min="0"
+                           value="{{ competitor.price if competitor else '0' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">评分（1-5）</label>
+                    <input type="number" name="rating" class="form-input" step="0.1" min="0" max="5"
+                           value="{{ competitor.rating if competitor else '0' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">评论数</label>
+                    <input type="number" name="review_count" class="form-input" min="0"
+                           value="{{ competitor.review_count if competitor else '0' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">竞品 URL</label>
+                <input type="url" name="url" class="form-input"
+                       value="{{ competitor.url if competitor else '' }}"
+                       placeholder="https://www.amazon.com/dp/...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">主要卖点（竞品做对了什么？）</label>
+                <textarea name="main_selling_points" class="form-input form-textarea" rows="2"
+                          placeholder="价格优势？设计特色？品牌知名度？">{{ competitor.main_selling_points if competitor else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">竞品弱点（竞品的不足之处）</label>
+                <textarea name="weakness" class="form-input form-textarea" rows="3"
+                          placeholder="质量缺陷？客服问题？定位偏差？">{{ competitor.weakness if competitor else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">差异化机会（基于弱点，我们能做什么不同的事？）</label>
+                <textarea name="differentiation" class="form-input form-textarea" rows="3"
+                          placeholder="基于竞品弱点的差异化策略">{{ competitor.differentiation if competitor else '' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% if action == 'edit' %}保存修改{% else %}创建竞品{% endif %}
+                </button>
+                <a href="/competitors" class="btn">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
