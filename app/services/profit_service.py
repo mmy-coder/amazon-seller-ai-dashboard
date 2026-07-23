@@ -27,6 +27,7 @@ def calculate_profit(
     fba_fee: float = 0.0,
     ad_cost: float = 0.0,
     return_rate: float = 0.03,
+    exchange_rate: float = 7.2,
 ) -> dict:
     """
     利润计算核心函数
@@ -34,17 +35,26 @@ def calculate_profit(
     Args:
         purchase_cost: 采购成本（人民币）
         selling_price: 售价（美元）
-        shipping_cost: 头程/物流成本
+        shipping_cost: 头程/物流成本（人民币）
         amazon_fee_rate: Amazon 佣金比例，默认 15%（0.15）
         fba_fee: FBA 履约费用
-        ad_cost: 广告成本
+        ad_cost: 广告成本（人民币）
         return_rate: 退货率，默认 3%（0.03）
+        exchange_rate: 1 美元可兑换的人民币金额，例如 7.2
 
     Returns:
         dict: 包含所有计算结果
     """
 
-    # 计算销售收入（简化：一件的售价就是一块钱收入）
+    if exchange_rate <= 0:
+        raise ValueError("汇率必须大于 0")
+
+    # 人民币成本先换算成美元，避免不同币种直接相减。
+    purchase_cost_usd = purchase_cost / exchange_rate
+    shipping_cost_usd = shipping_cost / exchange_rate
+    ad_cost_usd = ad_cost / exchange_rate
+
+    # 计算销售收入（简化：一件的售价就是一件商品的收入）
     # 真实场景中 gross_revenue 就是 selling_price（一件商品的销售收入）
     gross_revenue = selling_price
 
@@ -53,7 +63,14 @@ def calculate_profit(
     return_loss = selling_price * return_rate      # 退货损失（按售价比例估算）
 
     # 总成本 = 采购 + 物流 + Amazon佣金 + FBA + 广告 + 退货损失
-    total_cost = purchase_cost + shipping_cost + amazon_fee + fba_fee + ad_cost + return_loss
+    total_cost = (
+        purchase_cost_usd
+        + shipping_cost_usd
+        + amazon_fee
+        + fba_fee
+        + ad_cost_usd
+        + return_loss
+    )
 
     # 预估利润 = 收入 - 总成本
     estimated_profit = gross_revenue - total_cost
@@ -73,7 +90,7 @@ def calculate_profit(
     #   所以 → break_even_price = 固定成本 / (1 - amazon_fee_rate - return_rate)
     percentage_rate = amazon_fee_rate + return_rate
     if percentage_rate < 1:
-        fixed_costs = purchase_cost + shipping_cost + fba_fee + ad_cost
+        fixed_costs = purchase_cost_usd + shipping_cost_usd + fba_fee + ad_cost_usd
         break_even_price = round(fixed_costs / (1 - percentage_rate), 2)
     else:
         # 极端情况：费率 >= 100%，无法保本
@@ -91,6 +108,10 @@ def calculate_profit(
         risk_level = "high"
 
     return {
+        "exchange_rate": round(exchange_rate, 4),
+        "purchase_cost_usd": round(purchase_cost_usd, 2),
+        "shipping_cost_usd": round(shipping_cost_usd, 2),
+        "ad_cost_usd": round(ad_cost_usd, 2),
         "gross_revenue": round(gross_revenue, 2),
         "total_cost": round(total_cost, 2),
         "estimated_profit": round(estimated_profit, 2),

@@ -5,11 +5,14 @@ Competitors 路由 —— 竞品分析管理
 通过分析竞品的价格、卖点、弱点，找到自己的差异化方向。
 """
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import crud
+from app.schemas import CompetitorCreate
 
 router = APIRouter(prefix="/competitors", tags=["Competitors"])
 
@@ -68,29 +71,11 @@ async def competitor_form_edit(request: Request, competitor_id: int, db: Session
 @router.post("/")
 async def competitor_create(
     request: Request,
-    product_id: int = Form(...),
-    title: str = Form(...),
-    price: float = Form(0.0),
-    rating: float = Form(0.0),
-    review_count: int = Form(0),
-    url: str = Form(""),
-    main_selling_points: str = Form(""),
-    weakness: str = Form(""),
-    differentiation: str = Form(""),
+    form: Annotated[CompetitorCreate, Form()],
     db: Session = Depends(get_db),
 ):
     """创建竞品"""
-    crud.create_competitor(db, {
-        "product_id": product_id,
-        "title": title,
-        "price": price,
-        "rating": rating,
-        "review_count": review_count,
-        "url": url,
-        "main_selling_points": main_selling_points,
-        "weakness": weakness,
-        "differentiation": differentiation,
-    })
+    crud.create_competitor(db, form.model_dump())
     return RedirectResponse(url="/competitors", status_code=303)
 
 
@@ -98,33 +83,15 @@ async def competitor_create(
 async def competitor_update(
     request: Request,
     competitor_id: int,
-    product_id: int = Form(...),
-    title: str = Form(...),
-    price: float = Form(0.0),
-    rating: float = Form(0.0),
-    review_count: int = Form(0),
-    url: str = Form(""),
-    main_selling_points: str = Form(""),
-    weakness: str = Form(""),
-    differentiation: str = Form(""),
+    form: Annotated[CompetitorCreate, Form()],
     db: Session = Depends(get_db),
 ):
     """更新竞品"""
-    crud.update_competitor(db, competitor_id, {
-        "product_id": product_id,
-        "title": title,
-        "price": price,
-        "rating": rating,
-        "review_count": review_count,
-        "url": url,
-        "main_selling_points": main_selling_points,
-        "weakness": weakness,
-        "differentiation": differentiation,
-    })
+    crud.update_competitor(db, competitor_id, form.model_dump())
     return RedirectResponse(url="/competitors", status_code=303)
 
 
-@router.get("/{competitor_id}/delete")
+@router.post("/{competitor_id}/delete")
 async def competitor_delete(request: Request, competitor_id: int, db: Session = Depends(get_db)):
     """删除竞品"""
     crud.delete_competitor(db, competitor_id)

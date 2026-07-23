@@ -9,15 +9,13 @@ AI 服务层 —— 调用 DeepSeek API 或返回 Mock 数据
 DeepSeek API 的 base URL：https://api.deepseek.com/v1
 """
 
-import os
+import logging
 import httpx
-from dotenv import load_dotenv
+from app.config import settings
 
-# 加载 .env 文件中的环境变量
-load_dotenv()
-
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
-DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+logger = logging.getLogger(__name__)
+DEEPSEEK_API_KEY = settings.deepseek_api_key
+DEEPSEEK_BASE_URL = settings.deepseek_base_url
 
 
 def _has_api_key() -> bool:
@@ -61,6 +59,8 @@ async def _call_deepseek(prompt: str, system_prompt: str = "You are a helpful as
 def _mock_review_analysis() -> dict:
     """Mock 评论分析结果（无 API Key 时使用）"""
     return {
+        "_source": "mock",
+        "_warning": "未配置 DeepSeek API Key，当前展示演示数据。",
         "pain_points": "1. 电池续航不足，使用2-3小时后需要充电\n"
                         "2. 风力不够大，户外炎热天气效果不佳\n"
                         "3. 噪音偏大，安静场合使用尴尬\n"
@@ -92,6 +92,8 @@ def _mock_review_analysis() -> dict:
 def _mock_listing_optimization(product_name: str = "", category: str = "") -> dict:
     """Mock Listing 优化结果（无 API Key 时使用）"""
     return {
+        "_source": "mock",
+        "_warning": "未配置 DeepSeek API Key，当前展示演示数据。",
         "title_suggestions": f"【2025升级款】{product_name} - 超长续航|静音设计|便携式 - 适用于办公/户外/通勤\n"
                              f"备选：{product_name} | 4800mAh大电池 | 3档风速 | 无叶安全设计 | 轻量化便携",
         "bullet_points": f"【超长续航】升级4800mAh大容量电池，一次充电可使用6-8小时，告别电量焦虑；Type-C快充接口，充电更方便\n\n"
@@ -159,6 +161,8 @@ async def analyze_reviews(reviews: str) -> dict:
         ai_response = await _call_deepseek(prompt, "你是一位 Amazon 跨境电商产品分析专家。")
         # 将 AI 返回的文本解析为结构化字段（简化处理）
         return {
+            "_source": "deepseek",
+            "_warning": "",
             "pain_points": _extract_section(ai_response, "痛点"),
             "positive_points": _extract_section(ai_response, "好评"),
             "negative_points": _extract_section(ai_response, "差评"),
@@ -166,9 +170,11 @@ async def analyze_reviews(reviews: str) -> dict:
             "listing_suggestions": _extract_section(ai_response, "Listing"),
             "selling_points": _extract_section(ai_response, "卖点"),
         }
-    except Exception:
-        # API 调用失败时降级为 mock 数据，不中断程序
-        return _mock_review_analysis()
+    except Exception as exc:
+        logger.exception("DeepSeek 评论分析失败，已降级为演示数据: %s", exc)
+        result = _mock_review_analysis()
+        result["_warning"] = "DeepSeek 调用失败，当前展示演示数据，请检查 API 配置或网络。"
+        return result
 
 
 async def optimize_listing(
@@ -218,14 +224,19 @@ async def optimize_listing(
     try:
         ai_response = await _call_deepseek(prompt, "你是一位 Amazon 跨境电商 Listing 优化专家。")
         return {
+            "_source": "deepseek",
+            "_warning": "",
             "title_suggestions": _extract_section(ai_response, "标题"),
             "bullet_points": _extract_section(ai_response, "五点描述|bullet"),
             "search_keywords": _extract_section(ai_response, "关键词"),
             "product_description": _extract_section(ai_response, "产品描述|描述"),
             "differentiation_points": _extract_section(ai_response, "差异化"),
         }
-    except Exception:
-        return _mock_listing_optimization(product_name, category)
+    except Exception as exc:
+        logger.exception("DeepSeek Listing 优化失败，已降级为演示数据: %s", exc)
+        result = _mock_listing_optimization(product_name, category)
+        result["_warning"] = "DeepSeek 调用失败，当前展示演示数据，请检查 API 配置或网络。"
+        return result
 
 
 def _extract_section(text: str, keyword: str) -> str:

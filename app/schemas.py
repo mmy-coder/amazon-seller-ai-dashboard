@@ -22,7 +22,7 @@ class ProductBase(BaseModel):
     purchase_cost: float = Field(default=0.0, ge=0)
     selling_price: float = Field(default=0.0, ge=0)
     inventory: int = Field(default=0, ge=0)
-    status: str = Field(default="active")
+    status: str = Field(default="active", pattern="^(active|testing|stopped)$")
 
 
 class ProductCreate(ProductBase):
@@ -35,10 +35,10 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
     platform: Optional[str] = None
-    purchase_cost: Optional[float] = None
-    selling_price: Optional[float] = None
-    inventory: Optional[int] = None
-    status: Optional[str] = None
+    purchase_cost: Optional[float] = Field(default=None, ge=0)
+    selling_price: Optional[float] = Field(default=None, ge=0)
+    inventory: Optional[int] = Field(default=None, ge=0)
+    status: Optional[str] = Field(default=None, pattern="^(active|testing|stopped)$")
 
 
 class ProductResponse(ProductBase):
@@ -106,6 +106,7 @@ class ProfitCalculateRequest(BaseModel):
     fba_fee: float = Field(default=0.0, ge=0, description="FBA 履约费用")
     ad_cost: float = Field(default=0.0, ge=0, description="广告成本")
     return_rate: float = Field(default=0.03, ge=0, le=1, description="退货率")
+    exchange_rate: float = Field(default=7.2, gt=0, description="美元兑人民币汇率")
 
 
 class ProfitCalculateResponse(BaseModel):
@@ -118,6 +119,10 @@ class ProfitCalculateResponse(BaseModel):
     fba_fee: float
     ad_cost: float
     return_rate: float
+    exchange_rate: float
+    purchase_cost_usd: float
+    shipping_cost_usd: float
+    ad_cost_usd: float
     gross_revenue: float
     total_cost: float
     estimated_profit: float

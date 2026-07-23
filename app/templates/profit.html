@@ -59,6 +59,13 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">美元兑人民币汇率 <span class="required">*</span></label>
+                    <input type="number" name="exchange_rate" class="form-input" step="0.0001" min="0.0001"
+                           value="{{ default_exchange_rate }}" required>
+                    <small>示例：1 美元 = 7.20 人民币时填写 7.20</small>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">退货率</label>
                     <input type="number" name="return_rate" class="form-input" step="0.01" min="0" max="1"
                            value="0.03">
@@ -81,6 +88,14 @@
             </div>
             <div class="card-body">
                 <div class="result-grid">
+                    <div class="result-item">
+                        <span class="result-label">采购成本换算</span>
+                        <span class="result-value">¥{{ "%.2f"|format(result.purchase_cost) }} → ${{ "%.2f"|format(result.purchase_cost_usd) }}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">使用汇率</span>
+                        <span class="result-value">1 USD = {{ "%.4f"|format(result.exchange_rate) }} CNY</span>
+                    </div>
                     <div class="result-item">
                         <span class="result-label">销售收入</span>
                         <span class="result-value">${{ "%.2f"|format(result.gross_revenue) }}</span>
@@ -171,9 +186,10 @@
                         </span>
                     </td>
                     <td>
-                        <a href="/profit/{{ r.id }}/delete"
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('确定删除吗？')">删除</a>
+                        <form method="post" action="/profit/{{ r.id }}/delete" class="inline-form"
+                              onsubmit="return confirm('确定删除吗？')">
+                            <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}

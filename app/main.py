@@ -9,6 +9,8 @@ FastAPI 应用入口 —— Amazon Seller AI Dashboard
 5. 将首页重定向到 Dashboard
 """
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
@@ -17,16 +19,30 @@ import os
 
 from app.database import engine, Base, SessionLocal
 from app.services.seed_service import seed_data_if_empty
+from app.config import settings
 
 # 导入所有路由
 from app.routers import dashboard, products, competitors, profit, ai
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """应用生命周期：启动时初始化本地演示数据库。"""
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed_data_if_empty(db)
+    finally:
+        db.close()
+    yield
+
+
 # ===== 创建 FastAPI 应用 =====
 app = FastAPI(
-    title="Amazon Seller AI Dashboard",
+    title=settings.app_name,
     description="Amazon 跨境电商 AI 数据后台 - 学习/演示版",
-    version="1.0.0",
+    version=settings.app_version,
+    lifespan=lifespan,
 )
 
 # ===== 配置 Jinja2 模板引擎 =====
@@ -75,21 +91,3 @@ app.include_router(ai.router)
 async def root():
     """访问根路径时自动跳转到 Dashboard"""
     return RedirectResponse(url="/dashboard")
-
-
-# ===== 启动事件 =====
-@app.on_event("startup")
-def startup():
-    """应用启动时：创建数据库表、插入种子数据"""
-    # 创建所有表（如果表不存在会自动创建）
-    Base.metadata.create_all(bind=engine)
-
-    # 插入种子数据（仅在数据为空时）
-    db = SessionLocal()
-    try:
-        seed_data_if_empty(db)
-    finally:
-        db.close()
-
-    print("Amazon Seller AI Dashboard started successfully!")
-    print("Visit: http://127.0.0.1:8000/dashboard")

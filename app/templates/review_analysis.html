@@ -31,29 +31,34 @@
         <div class="card result-card">
             <div class="card-header"><h3>📊 分析结果</h3></div>
             <div class="card-body">
+                {% if result._warning %}
+                <div class="notice notice-warning">{{ result._warning }}</div>
+                {% else %}
+                <div class="notice notice-success">DeepSeek 实时分析结果</div>
+                {% endif %}
                 <div class="ai-section">
                     <h4>😣 用户主要痛点</h4>
-                    <div class="ai-content">{{ result.pain_points | replace('\n', '<br>') | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.pain_points }}</div>
                 </div>
                 <div class="ai-section">
                     <h4>👍 高频好评点</h4>
-                    <div class="ai-content">{{ result.positive_points | replace('\n', '<br>') | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.positive_points }}</div>
                 </div>
                 <div class="ai-section">
                     <h4>👎 高频差评点</h4>
-                    <div class="ai-content">{{ result.negative_points | replace('\n', '<br>') | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.negative_points }}</div>
                 </div>
                 <div class="ai-section">
                     <h4>🔧 产品改进建议</h4>
-                    <div class="ai-content">{{ result.improvement_suggestions | replace('\n', '<br>') | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.improvement_suggestions }}</div>
                 </div>
                 <div class="ai-section">
                     <h4>📋 Listing 优化建议</h4>
-                    <div class="ai-content">{{ result.listing_suggestions | replace('\n', '<br>') | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.listing_suggestions }}</div>
                 </div>
                 <div class="ai-section">
                     <h4>⭐ 可提炼的卖点（五点描述候选）</h4>
-                    <div class="ai-content">{{ result.selling_points | replace('\n', '<br>') | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.selling_points }}</div>
                 </div>
             </div>
         </div>

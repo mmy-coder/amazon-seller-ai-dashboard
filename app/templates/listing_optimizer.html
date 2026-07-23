@@ -61,25 +61,30 @@
         <div class="card result-card">
             <div class="card-header"><h3>📊 优化结果</h3></div>
             <div class="card-body">
+                {% if result._warning %}
+                <div class="notice notice-warning">{{ result._warning }}</div>
+                {% else %}
+                <div class="notice notice-success">DeepSeek 实时生成结果</div>
+                {% endif %}
                 <div class="ai-section">
                     <h4>🏷️ 标题建议</h4>
-                    <div class="ai-content">{{ result.title_suggestions | replace('\n', '<br>') | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.title_suggestions }}</div>
                 </div>
                 <div class="ai-section">
                     <h4>📌 五点描述（Bullet Points）</h4>
-                    <div class="ai-content">{{ result.bullet_points | replace('\n', '<br>') | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.bullet_points }}</div>
                 </div>
                 <div class="ai-section">
                     <h4>🔑 搜索关键词</h4>
-                    <div class="ai-content">{{ result.search_keywords | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.search_keywords }}</div>
                 </div>
                 <div class="ai-section">
                     <h4>📝 产品描述</h4>
-                    <div class="ai-content">{{ result.product_description | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.product_description }}</div>
                 </div>
                 <div class="ai-section">
                     <h4>💡 差异化卖点</h4>
-                    <div class="ai-content">{{ result.differentiation_points | replace('\n', '<br>') | safe }}</div>
+                    <div class="ai-content pre-wrap">{{ result.differentiation_points }}</div>
                 </div>
             </div>
         </div>

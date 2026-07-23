@@ -38,9 +38,10 @@
                     <td class="text-truncate" style="max-width: 200px;" title="{{ c.main_selling_points }}">{{ c.main_selling_points or '-' }}</td>
                     <td class="actions">
                         <a href="/competitors/{{ c.id }}/edit" class="btn btn-sm btn-edit">编辑</a>
-                        <a href="/competitors/{{ c.id }}/delete"
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('确定删除该竞品吗？')">删除</a>
+                        <form method="post" action="/competitors/{{ c.id }}/delete" class="inline-form"
+                              onsubmit="return confirm('确定删除该竞品吗？')">
+                            <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}

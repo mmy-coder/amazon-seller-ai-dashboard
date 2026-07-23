@@ -49,9 +49,10 @@
                     </td>
                     <td class="actions">
                         <a href="/products/{{ p.id }}/edit" class="btn btn-sm btn-edit">编辑</a>
-                        <a href="/products/{{ p.id }}/delete"
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('确定删除「{{ p.name }}」吗？')">删除</a>
+                        <form method="post" action="/products/{{ p.id }}/delete" class="inline-form"
+                              onsubmit="return confirm('确定删除「{{ p.name }}」吗？')">
+                            <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
